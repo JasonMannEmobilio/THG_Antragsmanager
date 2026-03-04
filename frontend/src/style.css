@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+    --color-emobilio-navy: #162430;
+    --color-emobilio-green: #33A330;
+    --color-emobilio-bg: #F4F7F8;
+}
+
+@layer base {
+    body {
+        @apply bg-emobilio-bg text-emobilio-navy font-sans;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-emobilio-green text-white font-semibold py-2 px-6 rounded-full shadow-lg shadow-emobilio-green/20 hover:scale-105 hover:bg-[#00A8AD] active:scale-95 transition-all cursor-pointer;
+    }
+
+    .card-premium {
+        @apply bg-white shadow-2xl shadow-emobilio-navy/5 rounded-3xl border border-white/40 backdrop-blur-sm;
+    }
+
+    .nav-blur {
+        @apply sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-emobilio-navy/5;
+    }
+}
