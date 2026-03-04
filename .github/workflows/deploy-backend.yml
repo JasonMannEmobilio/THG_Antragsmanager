@@ -18,5 +18,6 @@ jobs:
 
       - name: Build & Push Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/fastapi-app:latest .
-          docker push ghcr.io/${{ github.repository_owner }}/fastapi-app:latest
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$OWNER/fastapi-app:latest .
+          docker push ghcr.io/$OWNER/fastapi-app:latest
