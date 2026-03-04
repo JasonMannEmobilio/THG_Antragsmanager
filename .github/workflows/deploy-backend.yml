@@ -3,13 +3,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - uses: actions/checkout@v3
 
@@ -18,5 +18,5 @@ jobs:
 
       - name: Build & Push Image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/fastapi-app:latest backend/app
-          docker push ghcr.io/${{ github.repository }}/fastapi-app:latest
+          docker build -t ghcr.io/${{ github.repository_owner }}/fastapi-app:latest .
+          docker push ghcr.io/${{ github.repository_owner }}/fastapi-app:latest
