@@ -52,6 +52,75 @@
     </nav>
 
     <main class="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      
+      <!-- Dashboard Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <!-- Total Records -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emobilio-navy/10 p-5 flex items-center space-x-4">
+          <div class="bg-blue-50 p-3 rounded-full">
+            <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-emobilio-navy/60">Alle Anträge</p>
+            <p class="text-2xl font-bold text-emobilio-navy">{{ totalRecords }}</p>
+          </div>
+        </div>
+        
+        <!-- Pending Records -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emobilio-navy/10 p-5 flex items-center space-x-4">
+          <div class="bg-yellow-50 p-3 rounded-full">
+            <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-emobilio-navy/60">In Bearbeitung</p>
+            <p class="text-2xl font-bold text-emobilio-navy">{{ pendingRecords }}</p>
+          </div>
+        </div>
+
+        <!-- Rejected Records -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emobilio-navy/10 p-5 flex items-center space-x-4">
+          <div class="bg-red-50 p-3 rounded-full">
+            <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-emobilio-navy/60">Abgelehnt / Fehler</p>
+            <p class="text-2xl font-bold text-emobilio-navy">{{ rejectedRecords }}</p>
+          </div>
+        </div>
+
+        <!-- Successful Records -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emobilio-navy/10 p-5 flex items-center space-x-4">
+          <div class="bg-green-50 p-3 rounded-full">
+            <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-emobilio-navy/60">Erfolgreich</p>
+            <p class="text-2xl font-bold text-emobilio-navy">{{ successfulRecords }}</p>
+          </div>
+        </div>
+
+        <!-- Total Payout -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emobilio-navy/10 p-5 flex items-center space-x-4">
+          <div class="bg-emobilio-green/10 p-3 rounded-full">
+            <svg class="h-6 w-6 text-emobilio-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-emobilio-navy/60">Auszahlungssumme</p>
+            <p class="text-2xl font-bold text-emobilio-green">{{ totalPayoutFormatted }}</p>
+          </div>
+        </div>
+      </div>
+
       <div class="card-premium p-6 sm:p-10 mb-10 overflow-hidden">
          <div class="w-full">
             <!-- Removed redundant header -->
@@ -108,6 +177,38 @@ const isModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const selectedRecord = ref(null);
 const searchQuery = ref('');
+
+// Computed Statistics
+const totalRecords = computed(() => records.value.length);
+
+const pendingRecords = computed(() => {
+    return records.value.filter(r => {
+        const status = r.status ? r.status.toLowerCase() : '';
+        return status.includes('bearbeitung') || status.includes('neu') || status.includes('eingereicht');
+    }).length;
+});
+
+const rejectedRecords = computed(() => {
+    return records.value.filter(r => {
+        const status = r.status ? r.status.toLowerCase() : '';
+        return status.includes('abgelehnt') || status.includes('fehler');
+    }).length;
+});
+
+const successfulRecords = computed(() => {
+    return records.value.filter(r => {
+        const status = r.status ? r.status.toLowerCase() : '';
+        return status.includes('ausgezahlt') || status.includes('erfolgreich');
+    }).length;
+});
+
+const totalPayoutFormatted = computed(() => {
+    const totalCents = records.value
+        .filter(r => r.status && r.status.toLowerCase() === 'ausgezahlt' && r.premium_amount_cents)
+        .reduce((sum, r) => sum + parseInt(r.premium_amount_cents, 10), 0);
+    
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(totalCents / 100);
+});
 
 const filteredRecords = computed(() => {
     if (!searchQuery.value) {
