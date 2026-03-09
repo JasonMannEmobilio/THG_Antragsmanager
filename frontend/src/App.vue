@@ -36,7 +36,12 @@
                </svg>
              </div>
            </button>
-           <button @click="handleLogout" class="flex items-center space-x-2 px-4 py-2 border border-emobilio-navy/10 rounded-full hover:bg-red-50 hover:border-red-100 group transition-all" title="Abmelden">
+           <button @click="openHelpModal" class="p-2 ml-2 hover:bg-emobilio-navy/5 rounded-full transition-colors flex-shrink-0" title="Hilfe & Anleitung">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emobilio-navy/60 hover:text-emobilio-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+           </button>
+           <button @click="handleLogout" class="flex items-center space-x-2 ml-2 px-4 py-2 border border-emobilio-navy/10 rounded-full hover:bg-red-50 hover:border-red-100 group transition-all" title="Abmelden">
               <span class="text-sm font-bold text-emobilio-navy/60 group-hover:text-red-600">Abmelden</span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emobilio-navy/30 group-hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -76,6 +81,11 @@
         :message="notification.message"
         @close="notification.show = false"
     />
+
+    <HelpGuideModal
+        :is-open="isHelpModalOpen"
+        @close="closeHelpModal"
+    />
     </template>
   </div>
 </template>
@@ -84,6 +94,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import RecordList from './components/RecordList.vue';
 import EditRecordModal from './components/EditRecordModal.vue';
+import HelpGuideModal from './components/HelpGuideModal.vue';
 import NotificationToast from './components/NotificationToast.vue';
 import Login from './components/Login.vue';
 import logo from './assets/e_mobilio_logo.jpg';
@@ -94,6 +105,7 @@ const records = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const isModalOpen = ref(false);
+const isHelpModalOpen = ref(false);
 const selectedRecord = ref(null);
 const searchQuery = ref('');
 
@@ -161,6 +173,14 @@ const openEditModal = (record) => {
 const closeEditModal = () => {
     isModalOpen.value = false;
     selectedRecord.value = null;
+};
+
+const openHelpModal = () => {
+    isHelpModalOpen.value = true;
+};
+
+const closeHelpModal = () => {
+    isHelpModalOpen.value = false;
 };
 
 const handleSave = async (updatedData) => {
