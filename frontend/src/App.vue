@@ -8,7 +8,7 @@
     <!-- Authenticated View -->
     <template v-else>
       <nav class="nav-blur px-4 py-4 sm:px-6 lg:px-8 mb-8">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="max-w-[1920px] mx-auto flex justify-between items-center">
         <div class="flex items-center space-x-6">
           <img src="./assets/e_mobilio_logo.jpg" alt="e-mobilio logo" class="h-12 w-auto object-contain" />
           <h1 class="text-2xl font-black tracking-tight text-emobilio-navy">
@@ -29,7 +29,29 @@
                class="block w-full pl-10 pr-3 py-2 border border-emobilio-navy/10 rounded-full leading-5 bg-white/50 placeholder-emobilio-navy/30 focus:outline-none focus:ring-2 focus:ring-emobilio-green focus:border-emobilio-green sm:text-sm transition-all"
              />
            </div>
+           
+           <!-- Zero Premium Filter Toggle -->
+           <button 
+             @click="toggleZeroPremiumFilter" 
+             :class="showZeroPremiumOnly ? 'bg-red-100 text-red-700 border-red-200' : 'bg-white/50 text-emobilio-navy/60 border-emobilio-navy/10'"
+             class="flex items-center space-x-2 px-4 py-2 border rounded-full hover:bg-red-50 hover:text-red-600 transition-all text-sm font-bold whitespace-nowrap"
+             title="Nur 0€ Prämien anzeigen"
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+             </svg>
+             <span>0€ Prämie</span>
+           </button>
+
+           <button @click="handleExportCSV(filteredRecords)" class="flex items-center space-x-2 px-4 py-2 bg-emobilio-navy text-white rounded-full hover:bg-emobilio-navy/90 transition-all text-sm font-bold shadow-md shadow-emobilio-navy/10 whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emobilio-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>CSV Export</span>
+           </button>
+
            <button @click="fetchRecords" class="p-2 hover:bg-emobilio-navy/5 rounded-full transition-colors flex-shrink-0" title="Refresh">
+
              <div :class="{'animate-spin': loading}">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -51,7 +73,7 @@
       </div>
     </nav>
 
-    <main class="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <main class="relative px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
       
       <!-- Dashboard Statistics Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
@@ -144,6 +166,8 @@
                 :error="error"
                 @edit="openEditModal"
                 @refresh="fetchRecords"
+                @bulk-update="handleBulkUpdate"
+                @export-csv="handleExportCSV"
             />
          </div>
       </div>
@@ -190,6 +214,7 @@ const isModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const selectedRecord = ref(null);
 const searchQuery = ref('');
+const showZeroPremiumOnly = ref(false);
 
 // Computed Statistics
 const totalRecords = computed(() => records.value.length);
@@ -224,24 +249,40 @@ const registeredRecords = computed(() => {
 
 const totalPayoutFormatted = computed(() => {
     const totalCents = records.value
-        .filter(r => r.status && r.status.toLowerCase() === 'ausgezahlt' && r.premium_amount_cents)
+        .filter(r => r.status && r.status.toLowerCase().includes('ausgezahlt') && r.premium_amount_cents)
         .reduce((sum, r) => sum + parseInt(r.premium_amount_cents, 10), 0);
     
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(totalCents / 100);
 });
 
+const toggleZeroPremiumFilter = () => {
+    showZeroPremiumOnly.value = !showZeroPremiumOnly.value;
+};
+
 const filteredRecords = computed(() => {
-    if (!searchQuery.value) {
-        return records.value;
-    }
-    const query = searchQuery.value.toLowerCase();
-    return records.value.filter(record => {
-        // Search across all values in the record
-        return Object.values(record).some(val => {
-            if (val === null || val === undefined) return false;
-            return String(val).toLowerCase().includes(query);
+    let result = records.value;
+
+    // Filter by Zero Premium if toggled
+    if (showZeroPremiumOnly.value) {
+        result = result.filter(r => {
+            const premium = parseInt(r.premium_amount_cents, 10);
+            return isNaN(premium) || premium === 0;
         });
-    });
+    }
+
+    // Filter by Search Query
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(record => {
+            return Object.values(record).some(val => {
+                if (val === null || val === undefined) return false;
+                if (typeof val === 'object') return false; 
+                return String(val).toLowerCase().includes(query);
+            });
+        });
+    }
+
+    return result;
 });
 
 const notification = reactive({
@@ -308,7 +349,7 @@ const handleSave = async (updatedData) => {
     console.log('App.vue: handleSave called with:', updatedData);
     try {
         await updateRecord(updatedData);
-        // Optimistic update or refetch
+        // Optimistic update
         const index = records.value.findIndex(r => r.id === updatedData.id);
         if (index !== -1) {
             records.value[index] = { ...records.value[index], ...updatedData };
@@ -319,6 +360,78 @@ const handleSave = async (updatedData) => {
         showNotification('error', 'Error', 'Failed to update record: ' + (err.message || ''));
         console.error(err);
     }
+};
+
+const handleBulkUpdate = async ({ ids, data }) => {
+    loading.value = true;
+    let successCount = 0;
+    try {
+        for (const id of ids) {
+            try {
+                await updateRecord({ id, ...data });
+                const index = records.value.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    records.value[index] = { ...records.value[index], ...data };
+                }
+                successCount++;
+            } catch (err) {
+                console.error(`Failed to update record ${id}:`, err);
+            }
+        }
+        showNotification('success', 'Bulk Update', `${successCount} von ${ids.length} Anträgen erfolgreich aktualisiert.`);
+    } finally {
+        loading.value = false;
+    }
+};
+
+const handleExportCSV = (dataToExport) => {
+    if (dataToExport.length === 0) {
+        showNotification('info', 'Export', 'Keine Daten zum Exportieren vorhanden.');
+        return;
+    }
+
+    const headers = Object.keys(dataToExport[0]).filter(k => k !== 'document_file');
+    const csvRows = [];
+    
+    // Header row
+    csvRows.push(headers.join(';')); // Using ; for German Excel compatibility
+
+    // Data rows
+    for (const row of dataToExport) {
+        const values = headers.map(header => {
+            let val = row[header];
+            
+            // Format Dates
+            if (val !== null && val !== undefined && (header === 'updated_at' || header === 'created_at' || header.includes('date'))) {
+                if (typeof val === 'number') {
+                    val = new Date(val).toLocaleDateString('de-DE');
+                }
+            }
+            
+            // Format Premium
+            if (header === 'premium_amount_cents' && val !== null && val !== undefined) {
+                val = (parseInt(val, 10) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            }
+            
+            const escaped = ('' + (val !== null && val !== undefined ? val : '')).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(';'));
+    }
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `THG_Export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    showNotification('success', 'Export', 'Die CSV-Datei wurde generiert und heruntergeladen.');
 };
 
 onMounted(() => {

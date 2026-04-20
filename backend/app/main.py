@@ -6,8 +6,8 @@ import os
 from dotenv import load_dotenv
 import httpx
 
-# Load .env from the same directory as this file
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+# Load .env from the parent directory
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 app = FastAPI()
 
