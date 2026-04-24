@@ -23,9 +23,9 @@
         <div class="flex items-center space-x-3">
           <button @click="handleBulkUpdatePrice" class="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-bold border border-white/5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emobilio-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            <span>Prämie setzen</span>
+            <span>Mehrfachbearbeitung</span>
           </button>
           
           <button @click="handleBulkDownload" class="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-bold border border-white/5">
@@ -125,8 +125,8 @@
 
     </div>
     
-    <!-- Bulk Premium Modal -->
-    <BulkPremiumModal
+    <!-- Bulk Edit Modal -->
+    <BulkEditModal
         :is-open="isBulkModalOpen"
         :selected-count="selectedIds.size"
         @close="isBulkModalOpen = false"
@@ -137,7 +137,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import BulkPremiumModal from './BulkPremiumModal.vue';
+import BulkEditModal from './BulkEditModal.vue';
 
 const props = defineProps({
   records: Array,
@@ -278,9 +278,8 @@ const handleBulkUpdatePrice = () => {
     isBulkModalOpen.value = true;
 };
 
-const handleBulkModalSave = (priceFloat) => {
-    const priceCents = Math.round(priceFloat * 100);
-    emit('bulk-update', { ids: Array.from(selectedIds.value), data: { premium_amount_cents: priceCents } });
+const handleBulkModalSave = (payload) => {
+    emit('bulk-update', { ids: Array.from(selectedIds.value), data: payload });
     selectedIds.value.clear();
     isBulkModalOpen.value = false;
 };
